@@ -13,9 +13,14 @@ class Seo
     private static $description;
     private static $keywords;
     private static $tag_h;
+    private static $text;
     private $variables = [];
+    private $app;
 
-    private function __construct() {}
+    private function __construct() {
+        global $APPLICATION;
+        $this->app = $APPLICATION;
+    }
 
     /**
      * @return null|Seo
@@ -62,15 +67,19 @@ class Seo
     }
 
     /**
+     * @param $text
+     */
+    public static function setText($text)
+    {
+        self::$text = $text;
+    }
+
+    /**
      * @param $name
      * @param $value
      */
     public function setVariable($name, $value)
     {
-        if (!is_callable($value)) {
-            $value = function () use ($value) { return $value; };
-        }
-
         $this->variables[$name] = $value;
     }
 
@@ -93,7 +102,7 @@ class Seo
     public function getVariable($name)
     {
         $name = str_replace(['{', '}'], '', $name);
-        return isset($this->variables[$name]) ? $this->variables[$name]() : '';
+        return isset($this->variables[$name]) ? $this->variables[$name] : '';
     }
 
     /**
@@ -116,32 +125,40 @@ class Seo
 
     public static function set()
     {
-        global $APPLICATION;
-
         if (!empty(self::$title)) {
-            $APPLICATION->SetPageProperty('title', self::$title);
+            self::getInstance()->app->SetPageProperty('title', self::$title);
         }
 
         if (!empty(self::$description)) {
-            $APPLICATION->SetPageProperty('description', self::$description);
+            self::getInstance()->app->SetPageProperty('description', self::$description);
         }
 
         if (!empty(self::$keywords)) {
-            $APPLICATION->SetPageProperty('keywords', self::$keywords);
+            self::getInstance()->app->SetPageProperty('keywords', self::$keywords);
         }
 
         if (!empty(self::$tag_h)) {
-            $APPLICATION->SetPageProperty('tag_h', self::$tag_h);
+            self::getInstance()->app->SetPageProperty('tag_h', self::$tag_h);
+        }
+
+        if (!empty(self::$text)) {
+            self::getInstance()->app->SetPageProperty('seo_text', self::$text);
         }
     }
 
     /**
-     * @param $property_id
      * @param bool $default_value
      */
     public static function showH1($default_value = false)
     {
-        global $APPLICATION;
-        $APPLICATION->AddBufferContent([&$APPLICATION, 'GetProperty'], 'tag_h', $default_value);
+        self::getInstance()->app->AddBufferContent([self::getInstance()->app, 'GetProperty'], 'tag_h', $default_value);
+    }
+
+    /**
+     * @param bool $default_value
+     */
+    public static function showText($default_value = false)
+    {
+        self::getInstance()->app->AddBufferContent([self::getInstance()->app, 'GetProperty'], 'seo_text', $default_value);
     }
 }
